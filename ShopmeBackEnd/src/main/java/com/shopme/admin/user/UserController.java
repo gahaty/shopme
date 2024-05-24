@@ -20,6 +20,8 @@ import com.shopme.admin.FileUploadUtil;
 import com.shopme.common.entity.Role;
 import com.shopme.common.entity.User;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 @Controller
 public class UserController {
 
@@ -28,39 +30,38 @@ public class UserController {
 
 	@GetMapping("/users")
 	public String listFirstPage(Model model) {
-		return listByPage(1, model, "firstName", "asc", null);
+		return listByPage(1, model, "id", "asc", null);
 	}
 
 	@GetMapping("/users/page/{pageNum}")
 	public String listByPage(@PathVariable(name = "pageNum") int pageNum, Model model,
-			@Param("sortField") String sortField, @Param("sortDir") String sortDir,  @Param("keyword") String keyword) {
-		
+			@Param("sortField") String sortField, @Param("sortDir") String sortDir, @Param("keyword") String keyword) {
+
 		System.out.println("Sort Field: " + sortField);
 		System.out.println("Sort Order: " + sortDir);
-		
-		
+
 		Page<User> page = service.listByPage(pageNum, sortField, sortDir, keyword);
 		List<User> listUsers = page.getContent();
-		
+
 		long startCount = (pageNum - 1) * UserService.USERS_PER_PAGE + 1;
 		long endCount = startCount + UserService.USERS_PER_PAGE - 1;
 		if (endCount > page.getTotalElements()) {
 			endCount = page.getTotalElements();
 		}
-		
+
 		String reverseSortDir = sortDir.equals("asc") ? "desc" : "asc";
-		
+
 		model.addAttribute("currentPage", pageNum);
 		model.addAttribute("totalPages", page.getTotalPages());
 		model.addAttribute("startCount", startCount);
 		model.addAttribute("endCount", endCount);
-		model.addAttribute("totalItems", page.getTotalElements());	
+		model.addAttribute("totalItems", page.getTotalElements());
 		model.addAttribute("listUsers", listUsers);
 		model.addAttribute("sortField", sortField);
 		model.addAttribute("sortDir", sortDir);
 		model.addAttribute("reverseSortDir", reverseSortDir);
 		model.addAttribute("keyword", keyword);
-		
+
 		return "users";
 	}
 
@@ -85,7 +86,7 @@ public class UserController {
 			String fileName = StringUtils.cleanPath(multipartFile.getOriginalFilename());
 			user.setPhotos(fileName);
 			User savedUser = service.save(user);
-			
+
 			String uploadDir = "user-photos/" + savedUser.getId();
 
 			FileUploadUtil.cleanDir(uploadDir);
@@ -96,9 +97,9 @@ public class UserController {
 				user.setPhotos(null);
 			service.save(user);
 		}
-		
+
 		redirectAttributes.addFlashAttribute("message", "The user has been saved successfully.");
-		
+
 		return getRedirectURLtoAffectedUser(user);
 	}
 
@@ -146,6 +147,20 @@ public class UserController {
 		redirectAttributes.addFlashAttribute("message", message);
 
 		return "redirect:/users";
+	}
+
+	@GetMapping("/users/export/csv")
+	public void exportToCSV(HttpServletResponse response) throws IOException {
+		List<User> listUsers = service.listAll();
+		UserCsvExporter exporter = new UserCsvExporter();
+		exporter.export(listUsers, response);
+	}
+
+	@GetMapping("/users/export/excel")
+	public void exportToExcel(HttpServletResponse response) throws IOException {
+		List<User> listUsers = service.listAll();
+		UserExcelExporter exporter = new UserExcelExporter();
+		exporter.export(listUsers, response);
 	}
 
 }
