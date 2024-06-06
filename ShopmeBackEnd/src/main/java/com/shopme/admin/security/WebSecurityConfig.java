@@ -35,16 +35,28 @@ public class WebSecurityConfig {
 	}
 
 	@Bean
-	SecurityFilterChain configureHttpSecurity(HttpSecurity http) throws Exception {
+	SecurityFilterChain configureHttp(HttpSecurity http) throws Exception {
 		http.authenticationProvider(authenticationProvider());
-		http.authorizeHttpRequests(auth -> auth
-//				.requestMatchers("/index").authenticated()
-				.anyRequest().authenticated())
-				.formLogin(form -> form.loginPage("/login").usernameParameter("email").permitAll())
-				.logout(logout -> logout.permitAll());
 
-		return http.build();
+		http.authorizeHttpRequests(auth -> auth
+				.anyRequest().authenticated())
+			
+			.formLogin(form -> form
+				.loginPage("/login")
+				.usernameParameter("email")
+				.permitAll())
+
+			.logout(logout -> logout.permitAll())
+			
+			.rememberMe(rem -> rem
+					.key("AbcDefgHijKlmnOpqrs_1234567890")
+					.tokenValiditySeconds(7 * 24 * 60 * 60));
+		
+		http.headers(headers -> headers.frameOptions(f -> f.sameOrigin()));
+
+			return http.build();
 	}
+
 
 	@Bean
 	WebSecurityCustomizer configureWebSecurity() throws Exception {
