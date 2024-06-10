@@ -162,6 +162,8 @@
 	</div>
 </body>
 <script type="text/javascript">
+	moduleURL = "[[@{/users}]]";
+	
 	$(document).ready(function () {
 		$("#buttonCancel").on("click", function () {
 			window.location = "[[@{/users}]]";
@@ -214,6 +216,7 @@
 		$("#modalDialog").modal();
 	}
 </script>
+<script th:src="@{/js/common_form.js}"></script>
 </body>
 
 </html>
