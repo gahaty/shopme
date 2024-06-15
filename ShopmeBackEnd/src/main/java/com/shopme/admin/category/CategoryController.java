@@ -9,8 +9,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import com.shopme.common.entity.Category;
 
-
-
 @Controller
 public class CategoryController {
 
@@ -24,4 +22,13 @@ public class CategoryController {
 		
 		return "categories/categories";
 	}
+	
+	@GetMapping("/categories/new")
+	public String newCategory(Model model) {
+		List<Category> listCategories = service.listCategoriesUsedInForm();
+		model.addAttribute("category", new Category());
+		model.addAttribute("listCategories", listCategories);
+		model.addAttribute("pageTitle", "Create New Category");
+		return "categories/category_form";
+	} 
 }
