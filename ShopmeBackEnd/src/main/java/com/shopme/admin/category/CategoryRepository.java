@@ -13,5 +13,9 @@ public interface CategoryRepository
 
 	@Query("SELECT c FROM Category c WHERE c.parent.id is NULL")
 	public List<Category> listRootCategories();
+	
+	public Category findByName(String name);
+	
+	public Category findByAlias(String alias);
 
 }
