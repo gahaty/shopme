@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -24,10 +25,17 @@ public class CategoryController {
 	private CategoryService service;
 
 	@GetMapping("/categories")
-	public String listAll(Model model) {
-		List<Category> listCategories = service.listAll();
+	public String listAll(@Param("sortDir") String sortDir, Model model) {	
+		if (sortDir == null || sortDir.isEmpty()) {
+			sortDir = "asc";
+		}
+		
+		List<Category> listCategories = service.listAll(sortDir);
+		
+		String reverseSortDir = sortDir.equals("asc") ? "desc" : "asc";
+		
 		model.addAttribute("listCategories", listCategories);
-
+		model.addAttribute("reverseSortDir", reverseSortDir);
 		return "categories/categories";
 	}
 
@@ -77,6 +85,32 @@ public class CategoryController {
 			ra.addFlashAttribute("message", ex.getMessage());
 			return "redirect:/categories";
 		}
+	}
+	
+	@GetMapping("/categories/{id}/enabled/{status}")
+	public String updateCategoryEnabledStatus(@PathVariable("id") Integer id, @PathVariable("status") boolean enabled, RedirectAttributes ra) {
 
+			service.updateCategoryEnabledStatus(id, enabled);
+			String status = enabled ? "enabled" : "disabled";
+			String message = "The category ID " + id + " has been " + status;
+			ra.addFlashAttribute("message", message);
+			
+			return "redirect:/categories";
+		
+	}
+	
+	@GetMapping("/categories/delete/{id}")
+	public String deleteCategory(@PathVariable(name = "id") Integer id, Model model, RedirectAttributes ra) {
+		try {
+			service.delete(id);
+			String categoryDir = "../category-images/" + id;
+			FileUploadUtil.removeDir(categoryDir);
+			
+			ra.addFlashAttribute("message", "The Category ID " + id + " has been deleted successfully");
+		} catch (CategoryNotFoundException ex) {
+			ra.addFlashAttribute("message", ex.getMessage());
+		}
+		
+		return "redirect:/categories";
 	}
 }
